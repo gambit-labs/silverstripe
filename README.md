@@ -1,8 +1,18 @@
 ## SilverStripe in a docker container
 
-SilverStripe is a PHP framework, which may be run with several webservers, including Apache, nginx, lighthttpd. Also, there are different kinds of database backends SilverStripe may be used with, this image supports MySQL or MariaDB.
+SilverStripe is an open-source Content Management System (CMS) and a PHP framework for creating and maintaining websites.
 
-In this image nginx, php5 and a mysql client is installed, which means it's a perfect deployment solution for applications written for the LEMP stack.
+This is a base image for easily running SilverStripe without having to install it first, which is a quite time-consuming process when starting from scratch. 
+
+This image includes:
+ - nginx v1.6.2
+ - php v5.6.22
+ - mysql v14.14 (client only) 
+ - composer v1.2-dev
+
+And SilverStripe itself of course! You specify SilverStripe version in the tag of the image: e.g. `gambitlabs/silverstripe:3.1` contains the latest patch release for `3.1` (at the time of writing: `3.1.19`)
+
+Now when it's dockerized, it's a perfect deployment solution for applications written for the LEMP stack.
 
 _Note: It isn't production ready (yet!), but perfect for testing._
 
@@ -10,7 +20,7 @@ _Note: It isn't production ready (yet!), but perfect for testing._
 
 If you download this repo, you're able to convert any SilverStripe project to a docker image (at least, I hope so)
 
-```
+```console
 # Assume we are in the home directory, and have one SilverStripe project called my-project.com
 $ pwd
 /home/user-1
