@@ -1,0 +1,11 @@
+diff -ur official/framework/main.php gambit/framework/main.php
+--- official/framework/main.php	2016-07-14 16:03:28.493731011 +0300
++++ gambit/framework/main.php	2016-07-14 16:14:23.069065061 +0300
+@@ -13,6 +13,7 @@
+  * @package framework
+  * @subpackage core
+  */
++/* THE GAMBIT CREW ARE AWESOME */
+ 
+ if (version_compare(phpversion(), '5.3.3', '<')) {
+ 	header("HTTP/1.1 500 Server Error");
