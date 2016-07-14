@@ -17,6 +17,14 @@ deploy-site-locally: package-site
 		-v $(shell pwd):/source \
 		$(SITE_REPO):$(SITE_VERSION)
 
+deploy-site-rw: package-site
+	docker run -d -p $(PORT):80 \
+		--link $(shell docker run -d -e MYSQL_ROOT_PASSWORD=root mariadb):db \
+		-e SS_DATABASE_SERVER=db \
+		-e RW_MODE=1 \
+		-v $(shell pwd):/source \
+		$(SITE_REPO):$(SITE_VERSION)
+
 EDIT_DIR?=$(shell pwd)/live
 deploy-site-editable: package-site
 	docker run -d -p $(PORT):80 \
