@@ -67,6 +67,7 @@ RUN rm -r ${WWW_DIR} && composer create-project --no-dev silverstripe/installer 
 	&& echo "${SILVERSTRIPE_VERSION}" > ${WWW_DIR}/framework/silverstripe_version \
 	&& echo "${SILVERSTRIPE_VERSION}" > ${WWW_DIR}/cms/silverstripe_version
 
+ENV SILVERSTRIPE_VERSION=${SILVERSTRIPE_VERSION}
 # Copy over important configuration files
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx-silverstripe.conf /etc/nginx/silverstripe.conf
