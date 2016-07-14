@@ -48,7 +48,7 @@ ARG SILVERSTRIPE_VERSION=3.4.0
 
 # Install SilverStripe via composer and remove unnecessary files
 RUN rm -r ${WWW_DIR} && composer create-project --no-dev silverstripe/installer ${WWW_DIR} ${SILVERSTRIPE_VERSION} \
-	&& composer clear-cache \	
+	&& composer clear-cache \
 	&& cd ${WWW_DIR} \
 	&& find cms -maxdepth 1 -type f | grep -v "php" | xargs rm \
 	&& find framework -maxdepth 1 -type f | grep -v "php" | grep -v sake | xargs rm \
