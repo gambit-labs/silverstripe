@@ -1,13 +1,21 @@
 #!/bin/bash
 
+over-ss-32(){
+	SS_MAJOR=$(echo ${SILVERSTRIPE_VERSION} | cut -d. -f1)
+	SS_MINOR=$(echo ${SILVERSTRIPE_VERSION} | cut -d. -f2)
+	if [[ ${SS_MAJOR} == 3 && $((SS_MINOR < 2)) == 1 ]]; then
+		echo "false"
+	else
+		echo "true"
+	fi
+}
+
 # SOURCE_DIR and WWW_DIR comes from an ENV variable in the Dockerfile
 # Copy everything except cms, framework and _ss_environment.php from ${SOURCE_DIR} to ${WWW_DIR}
 if [[ $(ls ${SOURCE_DIR}) != "" ]]; then
 
 	# Also exclude siteconfig and reports when version is over 3.2
-	SS_MAJOR=$(echo ${SILVERSTRIPE_VERSION} | cut -d. -f1)
-	SS_MINOR=$(echo ${SILVERSTRIPE_VERSION} | cut -d. -f2)
-	if [[ ${SS_MAJOR} == 3 && $((SS_MINOR < 2)) == 1 ]]; then
+	if [[ $(over-ss-32) == "false" ]]; then
 		(cd ${SOURCE_DIR} && cp -R $(ls ${SOURCE_DIR} | \
 			grep -v 'framework' | \
 			grep -v 'cms' | \
@@ -41,6 +49,10 @@ fi
 RW_MODE=${RW_MODE:-0}
 if [[ ${RW_MODE} == 1 && ${DEV_MODE} == 0 ]]; then
 	rm -rf ${SOURCE_DIR}/cms ${SOURCE_DIR}/framework ${SOURCE_DIR}/_ss_environment.php
+
+	if [[ $(over-ss-32) == "true" ]]; then
+		rm -rf ${SOURCE_DIR}/reports ${SOURCE_DIR}/siteconfig
+	fi
 
 	# Do not override existing files with the same name
 	cp -r --no-clobber ${WWW_DIR}/* ${SOURCE_DIR}
