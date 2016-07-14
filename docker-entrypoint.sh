@@ -3,7 +3,23 @@
 # SOURCE_DIR and WWW_DIR comes from an ENV variable in the Dockerfile
 # Copy everything except cms, framework and _ss_environment.php from ${SOURCE_DIR} to ${WWW_DIR}
 if [[ $(ls ${SOURCE_DIR}) != "" ]]; then
-	(cd ${SOURCE_DIR} && cp -R $(ls ${SOURCE_DIR} | grep -v 'framework' | grep -v 'cms' | grep -v '_ss_environment.php') ${WWW_DIR})
+
+	# Also exclude siteconfig and reports when version is over 3.2
+	SS_MAJOR=$(echo ${SILVERSTRIPE_VERSION} | cut -d. -f1)
+	SS_MINOR=$(echo ${SILVERSTRIPE_VERSION} | cut -d. -f2)
+	if [[ ${SS_MAJOR} == 3 && $((SS_MINOR < 2)) == 1 ]]; then
+		(cd ${SOURCE_DIR} && cp -R $(ls ${SOURCE_DIR} | \
+			grep -v 'framework' | \
+			grep -v 'cms' | \
+			grep -v '_ss_environment.php') ${WWW_DIR})
+	else
+		(cd ${SOURCE_DIR} && cp -R $(ls ${SOURCE_DIR} | \
+			grep -v 'framework' | \
+			grep -v 'cms' | \
+			grep -v 'reports' | \
+			grep -v 'siteconfig' | \
+			grep -v '_ss_environment.php') ${WWW_DIR})
+	fi
 fi
 
 # dev mode exposes all web data at the /live mount.
