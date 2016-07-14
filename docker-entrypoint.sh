@@ -80,20 +80,22 @@ SS_DEFAULT_ADMIN_USERNAME=${SS_DEFAULT_ADMIN_USERNAME:-admin}
 SS_DEFAULT_ADMIN_PASSWORD=${SS_DEFAULT_ADMIN_PASSWORD:-admin}
 SS_ERROR_LOG=${SS_ERROR_LOG:-silverstripe.errlog}
 
-SS_TIMEZONE=${SS_TIMEZONE:-"Europe/Helsinki"}
-SS_DOMAIN_NAME=${SS_DOMAIN_NAME:-localhost}
-SS_LISTEN_PORT=${SS_LISTEN_PORT:-80}
-SS_LISTEN_HTTPS_PORT=${SS_LISTEN_HTTPS_PORT:-443}
-SS_ENABLE_HTTPS=${SS_ENABLE_HTTPS:-0}
+NGINX_DOMAIN_NAME=${NGINX_DOMAIN_NAME:-localhost}
+NGINX_LISTEN_PORT=${NGINX_LISTEN_PORT:-80}
+NGINX_LISTEN_HTTPS_PORT=${NGINX_LISTEN_HTTPS_PORT:-443}
+NGINX_ENABLE_HTTPS=${NGINX_ENABLE_HTTPS:-0}
 
-SS_WORKER_PROCESSES=${SS_WORKER_PROCESSES:-1}
-SS_WORKER_CONNECTIONS=${SS_WORKER_CONNECTIONS:-1024}
-SS_MAX_EXECUTION_TIME=${SS_MAX_EXECUTION_TIME:-300}
-SS_MAX_UPLOAD_SIZE=${SS_MAX_UPLOAD_SIZE:-32}
+NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-1}
+NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-1024}
+
+PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-300}
+PHP_MAX_UPLOAD_SIZE=${PHP_MAX_UPLOAD_SIZE:-32}
+
+PHP_TIMEZONE=${PHP_TIMEZONE:-"Europe/Helsinki"}
 
 cat > ${WWW_DIR}/_ss_environment.php <<EOF
 <?php
-ini_set('date.timezone', '${SS_TIMEZONE}');
+ini_set('date.timezone', '${PHP_TIMEZONE}');
 define('SS_ENVIRONMENT_TYPE', '${SS_ENVIRONMENT_TYPE}');
 define('SS_DATABASE_SERVER', '${SS_DATABASE_SERVER}');
 define('SS_DATABASE_PORT', '${SS_DATABASE_PORT}');
@@ -103,24 +105,24 @@ define('SS_DEFAULT_ADMIN_USERNAME', '${SS_DEFAULT_ADMIN_USERNAME}');
 define('SS_DEFAULT_ADMIN_PASSWORD', '${SS_DEFAULT_ADMIN_PASSWORD}');
 define('SS_ERROR_LOG', '${SS_ERROR_LOG}');
 global \$_FILE_TO_URL_MAPPING;
-\$_FILE_TO_URL_MAPPING['${WWW_DIR}'] = 'http://${SS_DOMAIN_NAME}';
+\$_FILE_TO_URL_MAPPING['${WWW_DIR}'] = 'http://${NGINX_DOMAIN_NAME}';
 EOF
 
 # Replace dynamic values in the default web site config
-sed -e "s|SS_WORKER_PROCESSES|${SS_WORKER_PROCESSES}|g" -i /etc/nginx/nginx.conf
-sed -e "s|SS_WORKER_CONNECTIONS|${SS_WORKER_CONNECTIONS}|g" -i /etc/nginx/nginx.conf
-sed -e "s|SS_MAX_UPLOAD_SIZE|${SS_MAX_UPLOAD_SIZE}|g" -i /etc/nginx/nginx.conf
+sed -e "s|NGINX_WORKER_PROCESSES|${NGINX_WORKER_PROCESSES}|g" -i /etc/nginx/nginx.conf
+sed -e "s|NGINX_WORKER_CONNECTIONS|${NGINX_WORKER_CONNECTIONS}|g" -i /etc/nginx/nginx.conf
+sed -e "s|PHP_MAX_UPLOAD_SIZE|${PHP_MAX_UPLOAD_SIZE}|g" -i /etc/nginx/nginx.conf
 
-sed -e "s|SS_MAX_EXECUTION_TIME|${SS_MAX_EXECUTION_TIME}|g" -i /etc/nginx/php.conf
+sed -e "s|PHP_MAX_EXECUTION_TIME|${PHP_MAX_EXECUTION_TIME}|g" -i /etc/nginx/php.conf
 
-sed -e "s|max_execution_time = 30|max_execution_time = ${SS_MAX_EXECUTION_TIME}|g" -i /etc/php5/fpm/php.ini
-sed -e "s|upload_max_filesize = 2M|upload_max_filesize = ${SS_MAX_UPLOAD_SIZE}M|g" -i /etc/php5/fpm/php.ini
-sed -e "s|post_max_size = 3M|post_max_size = $((SS_MAX_UPLOAD_SIZE+1))M|g" -i /etc/php5/fpm/php.ini
+sed -e "s|max_execution_time = 30|max_execution_time = ${PHP_MAX_EXECUTION_TIME}|g" -i /etc/php5/fpm/php.ini
+sed -e "s|upload_max_filesize = 2M|upload_max_filesize = ${PHP_MAX_UPLOAD_SIZE}M|g" -i /etc/php5/fpm/php.ini
+sed -e "s|post_max_size = 3M|post_max_size = $((PHP_MAX_UPLOAD_SIZE+1))M|g" -i /etc/php5/fpm/php.ini
 
 
 # Require those two files
-# docker run -d -e SS_ENABLE_HTTPS=1 -v $(pwd)/certs:/certs {image_name}
-if [[ ${SS_ENABLE_HTTPS} == 1 && (! -f ${CERT_DIR}/site.crt || ! -f ${CERT_DIR}/site.key) ]]; then
+# docker run -d -e NGINX_ENABLE_HTTPS=1 -v $(pwd)/certs:/certs {image_name}
+if [[ ${NGINX_ENABLE_HTTPS} == 1 && (! -f ${CERT_DIR}/site.crt || ! -f ${CERT_DIR}/site.key) ]]; then
 
 	echo "Fatal error: Tried to start in https mode but ${CERT_DIR}/site.crt or ${CERT_DIR}/site.key does not exist."
 	echo "Those two files are required in order to enable https."
@@ -129,17 +131,17 @@ if [[ ${SS_ENABLE_HTTPS} == 1 && (! -f ${CERT_DIR}/site.crt || ! -f ${CERT_DIR}/
 fi
 
 sed -e "s|SS_ROOT_DIR|${WWW_DIR}|g" -i /etc/nginx/sites-available/default-http
-sed -e "s|SS_DOMAIN_NAME|${SS_DOMAIN_NAME}|g" -i /etc/nginx/sites-available/default-http
-sed -e "s|SS_LISTEN_PORT|${SS_LISTEN_PORT}|g" -i /etc/nginx/sites-available/default-http
+sed -e "s|NGINX_DOMAIN_NAME|${NGINX_DOMAIN_NAME}|g" -i /etc/nginx/sites-available/default-http
+sed -e "s|NGINX_LISTEN_PORT|${NGINX_LISTEN_PORT}|g" -i /etc/nginx/sites-available/default-http
 
 sed -e "s|SS_ROOT_DIR|${WWW_DIR}|g" -i /etc/nginx/sites-available/default-https
-sed -e "s|SS_DOMAIN_NAME|${SS_DOMAIN_NAME}|g" -i /etc/nginx/sites-available/default-https
-sed -e "s|SS_LISTEN_PORT|${SS_LISTEN_PORT}|g" -i /etc/nginx/sites-available/default-https
-sed -e "s|SS_LISTEN_HTTPS_PORT|${SS_LISTEN_HTTPS_PORT}|g" -i /etc/nginx/sites-available/default-https
+sed -e "s|NGINX_DOMAIN_NAME|${NGINX_DOMAIN_NAME}|g" -i /etc/nginx/sites-available/default-https
+sed -e "s|NGINX_LISTEN_PORT|${NGINX_LISTEN_PORT}|g" -i /etc/nginx/sites-available/default-https
+sed -e "s|NGINX_LISTEN_HTTPS_PORT|${NGINX_LISTEN_HTTPS_PORT}|g" -i /etc/nginx/sites-available/default-https
 sed -e "s|CERT_DIR|${CERT_DIR}|g" -i /etc/nginx/sites-available/default-https
 
 # If https is disabled, remove the nginx config for HTTPS
-if [[ ${SS_ENABLE_HTTPS} == 1 ]]; then
+if [[ ${NGINX_ENABLE_HTTPS} == 1 ]]; then
 	ln -s /etc/nginx/sites-available/default-https /etc/nginx/sites-enabled/default
 else
 	ln -s /etc/nginx/sites-available/default-http /etc/nginx/sites-enabled/default
