@@ -3,7 +3,7 @@
 # The IMAGE_AUTHOR field is overridable, if you specify your own Docker Hub name, the script will push the images to your account
 IMAGE_AUTHOR=${IMAGE_AUTHOR:-gambitlabs}
 IMAGE_NAME=${IMAGE_NAME:-silverstripe}
-IMAGE_REVISION=${IMAGE_REVISION:-2}
+IMAGE_REVISION=${IMAGE_REVISION:-3}
 IMAGE_REPO=${IMAGE_AUTHOR}/${IMAGE_NAME}
 
 # Flag if the script should push the images
