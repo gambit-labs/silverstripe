@@ -62,11 +62,11 @@ fi
 
 # Traverse SilverStipe patches, and apply them
 if [[ -d ${WWW_DIR}/_patches/${SILVERSTRIPE_VERSION} ]]; then
+	cd ${WWW_DIR}
+
 	for file in ${WWW_DIR}/_patches/${SILVERSTRIPE_VERSION}/*.patch; do
+		echo "Patching SilverStripe with file: $file"
 		patch -p1 < $file
-	done
-	for file in ${WWW_DIR}/_patches/${SILVERSTRIPE_VERSION}/*.gitapply; do
-		git apply < $file
 	done
 fi
 
