@@ -1,7 +1,14 @@
 # Gambit Labs SmartTrack 2016
 
 BASE_IMAGE?=gambitlabs/silverstripe
+DEFAULT_VERSION=3.4
 PORT?=80
+
+deploy:
+	docker run -d -p $(PORT):80 \
+		--link $(shell docker run -d -e MYSQL_ROOT_PASSWORD=root mariadb):db \
+		-e SS_DATABASE_SERVER=db \
+		$(BASE_IMAGE):$(DEFAULT_VERSION)
 
 deploy-site-locally: package-site
 	docker run -d -p $(PORT):80 \
@@ -26,28 +33,28 @@ deploy-site-k8s: package-site
 remove-site-k8s:
 
 ifndef SITE_REPO
-    $(error SITE_REPO is undefined)
+	$(error SITE_REPO is undefined)
 endif
 ifndef SITE_VERSION
-    $(error SITE_VERSION is undefined)
+	$(error SITE_VERSION is undefined)
 endif
 	@kubectl delete rc $(SITE_NAME)-$(SITE_VERSION)
 	@kubectl delete svc $(SITE_NAME)
 
-TMP_DOCKERFILE:=$(shell mktemp $(SITE_DIR)/Dockerfile.XXXXX)
+TMP_DOCKERFILE=$(shell mktemp $(SITE_DIR)/Dockerfile.XXXXX)
 package-site:
 
 ifndef SITE_DIR
-    $(error SITE_DIR is undefined)
+	(error SITE_DIR is undefined)
 endif
 ifndef SITE_REPO
-    $(error SITE_REPO is undefined)
+	$(error SITE_REPO is undefined)
 endif
 ifndef SITE_VERSION
-    $(error SITE_VERSION is undefined)
+	$(error SITE_VERSION is undefined)
 endif
 ifndef SS_VERSION
-    $(error SS_VERSION is undefined)
+	$(error SS_VERSION is undefined)
 endif
 	echo "FROM $(BASE_IMAGE):$(SS_VERSION)" > $(TMP_DOCKERFILE)
 	docker build -t $(SITE_REPO):$(SITE_VERSION) -f $(TMP_DOCKERFILE) $(SITE_DIR)
