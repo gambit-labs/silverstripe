@@ -14,27 +14,24 @@ deploy-site-locally: package-site
 	docker run -d -p $(PORT):80 \
 		--link $(shell docker run -d -e MYSQL_ROOT_PASSWORD=root mariadb):db \
 		-e SS_DATABASE_SERVER=db \
-		-v $(shell pwd):/source \
 		$(SITE_REPO):$(SITE_VERSION)
 
 deploy-site-rw: package-site
 	docker run -d -p $(PORT):80 \
 		--link $(shell docker run -d -e MYSQL_ROOT_PASSWORD=root mariadb):db \
 		-e SS_DATABASE_SERVER=db \
-		-e RW_MODE=1 \
-		-v $(shell pwd):/source \
+		-e RW_MODE=1 -v $(SITE_DIR):/source \
 		$(SITE_REPO):$(SITE_VERSION)
 
-EDIT_DIR?=$(shell pwd)/live
 deploy-site-editable: package-site
 	docker run -d -p $(PORT):80 \
 		--link $(shell docker run -d -e MYSQL_ROOT_PASSWORD=root mariadb):db \
 		-e SS_DATABASE_SERVER=db \
-		-e DEV_MODE=1 -v $(EDIT_DIR):/live \
-		-v $(shell pwd):/source \
+		-e DEV_MODE=1 -v $(SITE_DIR)/live:/live \
+		-v $(SITE_DIR):/source \
 		$(SITE_REPO):$(SITE_VERSION)
 
-SITE_NAME=$(shell echo $(SITE_REPO) | cut -d/ -f2)
+SITE_NAME=$(shell basename $(SITE_REPO))
 deploy-site-k8s: package-site
 	sed -e "s|__REPO__|$(SITE_REPO)|g;s|__NAME__|$(SITE_NAME)|g;s|__VERSION__|$(SITE_VERSION)|g;" k8s.yaml | kubectl create -f - --validate=false
 
