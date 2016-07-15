@@ -11,7 +11,14 @@ PUSH=${PUSH:-0}
 
 # The latest SilverStripe versions for all minor releases
 LATEST_MINOR_SS_VERSIONS=(
+
+	# Experimental release:
+	4.0.0-alpha1
+
+	# Stable release:
 	3.4.0
+
+	# Deprecated releases:
 	3.3.2
 	3.2.4
 	3.1.19
