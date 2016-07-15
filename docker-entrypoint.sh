@@ -85,7 +85,6 @@ NGINX_LISTEN_PORT=${NGINX_LISTEN_PORT:-80}
 NGINX_LISTEN_HTTPS_PORT=${NGINX_LISTEN_HTTPS_PORT:-443}
 NGINX_ENABLE_HTTPS=${NGINX_ENABLE_HTTPS:-0}
 NGINX_ENABLE_HTTP2=${NGINX_ENABLE_HTTP2:-0}
-PHP_SERVER=${PHP_SERVER:-localhost}
 
 NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-1}
 NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-1024}
@@ -94,6 +93,9 @@ PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-300}
 PHP_MAX_UPLOAD_SIZE=${PHP_MAX_UPLOAD_SIZE:-32}
 
 PHP_TIMEZONE=${PHP_TIMEZONE:-"Europe/Helsinki"}
+
+PHP_SERVER=${PHP_SERVER:-localhost}
+MAIL_SERVER=${MAIL_SERVER:-localhost}
 
 # If HTTP/2 is used, HTTPS must also be used
 if [[ ${NGINX_ENABLE_HTTP2} == 1 ]]; then
@@ -159,6 +161,7 @@ else
 fi
 
 # If https is disabled, remove the nginx config for HTTPS
+mkdir -p /etc/nginx/sites-enabled
 if [[ ${NGINX_ENABLE_HTTPS} == 1 ]]; then
 	ln -s /etc/nginx/sites-available/default-https /etc/nginx/sites-enabled/default
 else
@@ -177,7 +180,12 @@ chown -R www-data:www-data ${WWW_DIR}
 if [[ ${PHP_SERVER} == "localhost" ]]; then
 
 	# Start the FastCGI server
-	exec gosu www-data:www-data php5-fpm &
+	exec php5-fpm &
+fi
+
+# Start a socat forwarder process if the mail forwarder is present somewhere else
+if [[ ${MAIL_SERVER} != "localhost" ]]; then
+	exec socat -ls TCP4-LISTEN:25,fork,reuseaddr TCP4:${MAIL_SERVER}:25 &
 fi
 
 # Start the nginx webserver in foreground mode. The docker container lifecycle will be tied to nginx.
