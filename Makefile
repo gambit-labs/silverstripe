@@ -64,3 +64,10 @@ endif
 	echo "FROM $(BASE_IMAGE):$(SS_VERSION)" > $(TMP_DOCKERFILE)
 	docker build -t $(SITE_REPO):$(SITE_VERSION) -f $(TMP_DOCKERFILE) $(SITE_DIR)
 	rm $(TMP_DOCKERFILE)
+
+#PHP_CONTAINER:=$(shell docker run -d --link $$(docker run -d -e MYSQL_ROOT_PASSWORD=root mariadb):db -w / php:5-fpm-alpine)
+#TMP_DIR:=$(shell mktemp -d /tmp/ss.XXXXX)
+#deploy-php:
+#	docker cp $(shell docker run -d -p $(PORT):80 --link $(PHP_CONTAINER):fpm -e SS_DATABASE_SERVER=db -e PHP_SERVER=fpm $(BASE_IMAGE):$(DEFAULT_VERSION)):/var/www $(TMP_DIR)
+#	docker cp $(TMP_DIR)/www $(PHP_CONTAINER):/var/
+#	docker exec -it $(PHP_CONTAINER) /bin/sh -c "chown -R www-data:www-data /var/www"
