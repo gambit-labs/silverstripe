@@ -137,13 +137,17 @@ if [[ ${NGINX_ENABLE_HTTPS} == 1 && (! -f ${CERT_DIR}/site.crt || ! -f ${CERT_DI
 	exit 1
 fi
 
-sed -e "s|SS_ROOT_DIR|${WWW_DIR}|g" -i /etc/nginx/sites-available/default-http
-sed -e "s|NGINX_DOMAIN_NAME|${NGINX_DOMAIN_NAME}|g" -i /etc/nginx/sites-available/default-http
-sed -e "s|NGINX_LISTEN_PORT|${NGINX_LISTEN_PORT}|g" -i /etc/nginx/sites-available/default-http
+# If we've enabled https, an optional dhparam.pem file may be specified for added encryption
+# If there is no such file, remove the statement from the config
+# Generate with this command: openssl dhparam -out /etc/nginx/ssl/dhparam.pem 2048
+if [[ ${NGINX_ENABLE_HTTPS} == 1 && ! -f ${CERT_DIR}/dhparam.pem ]]; then
+	sed -e "/ssl_dhparam/d" -i /etc/nginx/sites-available/default-https
+fi
 
-sed -e "s|SS_ROOT_DIR|${WWW_DIR}|g" -i /etc/nginx/sites-available/default-https
-sed -e "s|NGINX_DOMAIN_NAME|${NGINX_DOMAIN_NAME}|g" -i /etc/nginx/sites-available/default-https
-sed -e "s|NGINX_LISTEN_PORT|${NGINX_LISTEN_PORT}|g" -i /etc/nginx/sites-available/default-https
+sed -e "s|SS_ROOT_DIR|${WWW_DIR}|g" -i /etc/nginx/sites-available/default-http /etc/nginx/sites-available/default-https
+sed -e "s|NGINX_DOMAIN_NAME|${NGINX_DOMAIN_NAME}|g" -i /etc/nginx/sites-available/default-http /etc/nginx/sites-available/default-https
+sed -e "s|NGINX_LISTEN_PORT|${NGINX_LISTEN_PORT}|g" -i /etc/nginx/sites-available/default-http /etc/nginx/sites-available/default-https
+
 sed -e "s|NGINX_LISTEN_HTTPS_PORT|${NGINX_LISTEN_HTTPS_PORT}|g" -i /etc/nginx/sites-available/default-https
 sed -e "s|CERT_DIR|${CERT_DIR}|g" -i /etc/nginx/sites-available/default-https
 
