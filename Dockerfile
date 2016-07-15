@@ -40,12 +40,11 @@ ENV SOURCE_DIR=/source \
 RUN sed -e "s|# sv_FI.UTF-8|sv_FI.UTF-8|g;s|# fi_FI.UTF-8|fi_FI.UTF-8|g;s|# en_US.UTF-8|en_US.UTF-8|g" -i /etc/locale.gen \
 	&& locale-gen \
 	&& curl -sSL https://getcomposer.org/composer.phar > /usr/local/bin/composer \
-	&& curl -sSL https://github.com/tianon/gosu/releases/download/1.9/gosu-amd64 > /usr/local/bin/gosu \
-	&& chmod +x /usr/local/bin/composer /usr/local/bin/gosu \
+	&& chmod +x /usr/local/bin/composer \
 	&& sed -e "s|listen = /var/run/php5-fpm.sock|listen = 127.0.0.1:9000|g;" -i /etc/php5/fpm/pool.d/www.conf \
 	&& ln -sf /dev/stdout /var/log/nginx/access.log \
+	&& ln -sf /dev/stdout /var/log/php5-fpm.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log \
-	&& rm /etc/nginx/sites-enabled/default \
 	&& mkdir -p ${SOURCE_DIR} ${WWW_DIR} ${CERT_DIR} ${SS_OVERRIDE_DIR}
 
 # This variable is overridable when building: docker build --build-arg SILVERSTRIPE_VERSION=3.x.y -t gambitlabs/silverstripe:3.x.y .
