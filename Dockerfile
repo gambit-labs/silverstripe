@@ -1,9 +1,9 @@
 FROM debian:jessie
 
 # Install all necessary packages and upgrade the current debian distro
-COPY nginx-pgp.key /etc/nginx/nginx.key
+COPY nginx/pgp.key /etc/nginx/pgp.key
 RUN echo "deb http://nginx.org/packages/mainline/debian/ jessie nginx" > /etc/apt/sources.list.d/nginx.list \
-	&& apt-key add /etc/nginx/nginx.key \
+	&& apt-key add /etc/nginx/pgp.key \
 	&& DEBIAN_FRONTEND=noninteractive apt-get update -y \
 	&& DEBIAN_FRONTEND=noninteractive apt-get -yy -q install --no-install-recommends \
 	curl \
@@ -39,7 +39,8 @@ ENV SOURCE_DIR=/source \
 RUN sed -e "s|# sv_FI.UTF-8|sv_FI.UTF-8|g;s|# fi_FI.UTF-8|fi_FI.UTF-8|g;s|# en_US.UTF-8|en_US.UTF-8|g" -i /etc/locale.gen \
 	&& locale-gen \
 	&& curl -sSL https://getcomposer.org/composer.phar > /usr/local/bin/composer \
-	&& chmod +x /usr/local/bin/composer \
+	&& curl -sSL https://github.com/tianon/gosu/releases/download/1.9/gosu-amd64 > /usr/local/bin/gosu \
+	&& chmod +x /usr/local/bin/composer /usr/local/bin/gosu \
 	&& sed -e "s|listen = /var/run/php5-fpm.sock|listen = 127.0.0.1:9000|g;" -i /etc/php5/fpm/pool.d/www.conf \
 	&& ln -sf /dev/stdout /var/log/nginx/access.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log \
@@ -72,11 +73,9 @@ RUN rm -r ${WWW_DIR} && composer create-project --no-dev silverstripe/installer 
 
 ENV SILVERSTRIPE_VERSION=${SILVERSTRIPE_VERSION}
 # Copy over important configuration files
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY nginx-silverstripe.conf /etc/nginx/silverstripe.conf
-COPY nginx-php.conf /etc/nginx/php.conf
-COPY nginx-http-default.conf /etc/nginx/sites-available/default-http
-COPY nginx-https-default.conf /etc/nginx/sites-available/default-https
+COPY nginx/nginx.conf nginx/silverstripe.conf nginx/ssl.conf nginx/php.conf /etc/nginx/
+COPY nginx/http-default.conf /etc/nginx/sites-available/default-http
+COPY nginx/https-default.conf /etc/nginx/sites-available/default-https
 
 # This script is executed by default when the docker container starts
 COPY docker-entrypoint.sh /
