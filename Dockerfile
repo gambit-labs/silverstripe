@@ -24,6 +24,7 @@ RUN echo "deb http://nginx.org/packages/mainline/debian/ jessie nginx" > /etc/ap
 	php5-mysqlnd \
 	php5-tidy \
 	sendmail \
+	socat \
 	&& DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
 	&& DEBIAN_FRONTEND=noninteractive apt-get autoremove -y \
 	&& DEBIAN_FRONTEND=noninteractive apt-get clean -y \
