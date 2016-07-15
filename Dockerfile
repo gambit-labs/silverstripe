@@ -45,6 +45,7 @@ RUN sed -e "s|# sv_FI.UTF-8|sv_FI.UTF-8|g;s|# fi_FI.UTF-8|fi_FI.UTF-8|g;s|# en_U
 	&& ln -sf /dev/stdout /var/log/nginx/access.log \
 	&& ln -sf /dev/stdout /var/log/php5-fpm.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log \
+	&& rm -f /etc/nginx/conf.d/default.conf \
 	&& mkdir -p ${SOURCE_DIR} ${WWW_DIR} ${CERT_DIR} ${SS_OVERRIDE_DIR}
 
 # This variable is overridable when building: docker build --build-arg SILVERSTRIPE_VERSION=3.x.y -t gambitlabs/silverstripe:3.x.y .
