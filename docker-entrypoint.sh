@@ -84,6 +84,7 @@ NGINX_DOMAIN_NAME=${NGINX_DOMAIN_NAME:-localhost}
 NGINX_LISTEN_PORT=${NGINX_LISTEN_PORT:-80}
 NGINX_LISTEN_HTTPS_PORT=${NGINX_LISTEN_HTTPS_PORT:-443}
 NGINX_ENABLE_HTTPS=${NGINX_ENABLE_HTTPS:-0}
+NGINX_ENABLE_HTTP2=${NGINX_ENABLE_HTTP2:-0}
 PHP_SERVER=${PHP_SERVER:-localhost}
 
 NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-1}
@@ -93,6 +94,11 @@ PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-300}
 PHP_MAX_UPLOAD_SIZE=${PHP_MAX_UPLOAD_SIZE:-32}
 
 PHP_TIMEZONE=${PHP_TIMEZONE:-"Europe/Helsinki"}
+
+# If HTTP/2 is used, HTTPS must also be used
+if [[ ${NGINX_ENABLE_HTTP2} == 1 ]]; then
+	NGINX_ENABLE_HTTPS=1
+fi
 
 cat > ${WWW_DIR}/_ss_environment.php <<EOF
 <?php
@@ -140,6 +146,13 @@ sed -e "s|NGINX_DOMAIN_NAME|${NGINX_DOMAIN_NAME}|g" -i /etc/nginx/sites-availabl
 sed -e "s|NGINX_LISTEN_PORT|${NGINX_LISTEN_PORT}|g" -i /etc/nginx/sites-available/default-https
 sed -e "s|NGINX_LISTEN_HTTPS_PORT|${NGINX_LISTEN_HTTPS_PORT}|g" -i /etc/nginx/sites-available/default-https
 sed -e "s|CERT_DIR|${CERT_DIR}|g" -i /etc/nginx/sites-available/default-https
+
+# Set the http2 directive
+if [[ ${NGINX_ENABLE_HTTP2} == 1 ]]; then
+	sed -e "s|USE_HTTP2|http2|g" -i /etc/nginx/sites-available/default-https
+else
+	sed -e "s|USE_HTTP2||g" -i /etc/nginx/sites-available/default-https
+fi
 
 # If https is disabled, remove the nginx config for HTTPS
 if [[ ${NGINX_ENABLE_HTTPS} == 1 ]]; then
