@@ -68,7 +68,6 @@ RUN rm -r ${WWW_DIR} && composer create-project --no-dev silverstripe/installer 
 	.htaccess assets/.htaccess mysite/.htaccess \
 	composer.json composer.lock \
 	install-frameworkmissing.html \
-	vendor \
 	&& echo "${SILVERSTRIPE_VERSION}" > ${WWW_DIR}/framework/silverstripe_version \
 	&& echo "${SILVERSTRIPE_VERSION}" > ${WWW_DIR}/cms/silverstripe_version
 
