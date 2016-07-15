@@ -57,8 +57,8 @@ RUN rm -r ${WWW_DIR} && composer create-project --no-dev silverstripe/installer 
 	&& cd ${WWW_DIR} \
 	&& find cms -maxdepth 1 -type f | grep -v "php" | xargs rm \
 	&& find framework -maxdepth 1 -type f | grep -v "php" | grep -v sake | xargs rm \
-	&& find reports -maxdepth 1 -type f | grep -v "php" | xargs rm \
-	&& find siteconfig -maxdepth 1 -type f | grep -v "php" | xargs rm \
+	&& ([ -d reports ] && find reports -maxdepth 1 -type f | grep -v "php" | xargs rm || echo "ok") \
+	&& ([ -d siteconfig ] && find siteconfig -maxdepth 1 -type f | grep -v "php" | xargs rm || echo "ok") \
 	&& find themes/simple -maxdepth 1 -type f | xargs rm \
 	&& rm -rf \
 	README.md .editorconfig \
