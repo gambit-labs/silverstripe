@@ -1,7 +1,10 @@
 FROM debian:jessie
 
 # Install all necessary packages and upgrade the current debian distro
-RUN DEBIAN_FRONTEND=noninteractive apt-get update -y \
+COPY nginx-pgp.key /etc/nginx/nginx.key
+RUN echo "deb http://nginx.org/packages/mainline/debian/ jessie nginx" > /etc/apt/sources.list.d/nginx.list \
+	&& apt-key add /etc/nginx/nginx.key \
+	&& DEBIAN_FRONTEND=noninteractive apt-get update -y \
 	&& DEBIAN_FRONTEND=noninteractive apt-get -yy -q install --no-install-recommends \
 	curl \
 	git \
