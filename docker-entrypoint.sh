@@ -84,6 +84,7 @@ NGINX_DOMAIN_NAME=${NGINX_DOMAIN_NAME:-localhost}
 NGINX_LISTEN_PORT=${NGINX_LISTEN_PORT:-80}
 NGINX_LISTEN_HTTPS_PORT=${NGINX_LISTEN_HTTPS_PORT:-443}
 NGINX_ENABLE_HTTPS=${NGINX_ENABLE_HTTPS:-0}
+PHP_SERVER=${PHP_SERVER:-localhost}
 
 NGINX_WORKER_PROCESSES=${NGINX_WORKER_PROCESSES:-1}
 NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-1024}
@@ -114,11 +115,11 @@ sed -e "s|NGINX_WORKER_CONNECTIONS|${NGINX_WORKER_CONNECTIONS}|g" -i /etc/nginx/
 sed -e "s|PHP_MAX_UPLOAD_SIZE|${PHP_MAX_UPLOAD_SIZE}|g" -i /etc/nginx/nginx.conf
 
 sed -e "s|PHP_MAX_EXECUTION_TIME|${PHP_MAX_EXECUTION_TIME}|g" -i /etc/nginx/php.conf
+sed -e "s|PHP_SERVER|${PHP_SERVER}|g" -i /etc/nginx/php.conf
 
 sed -e "s|max_execution_time = 30|max_execution_time = ${PHP_MAX_EXECUTION_TIME}|g" -i /etc/php5/fpm/php.ini
 sed -e "s|upload_max_filesize = 2M|upload_max_filesize = ${PHP_MAX_UPLOAD_SIZE}M|g" -i /etc/php5/fpm/php.ini
 sed -e "s|post_max_size = 3M|post_max_size = $((PHP_MAX_UPLOAD_SIZE+1))M|g" -i /etc/php5/fpm/php.ini
-
 
 # Require those two files
 # docker run -d -e NGINX_ENABLE_HTTPS=1 -v $(pwd)/certs:/certs {image_name}
@@ -155,8 +156,12 @@ fi
 # Make the user and group www-data own the content. nginx is using that user for displaying content 
 chown -R www-data:www-data ${WWW_DIR}
 
-# Start the FastCGI server
-exec php5-fpm &
+# Only start PHP if we're listening on it here
+if [[ ${PHP_SERVER} == "localhost" ]]; then
+
+	# Start the FastCGI server
+	exec php5-fpm &
+fi
 
 # Start the nginx webserver in foreground mode. The docker container lifecycle will be tied to nginx.
 exec nginx -g "daemon off;"
