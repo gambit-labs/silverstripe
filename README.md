@@ -1,11 +1,11 @@
-## SilverStripe in a docker container
+# SilverStripe in a docker container
 
 SilverStripe is an open-source Content Management System (CMS) and a PHP framework for creating and maintaining websites.
 
 This is a base image for easily running SilverStripe without having to install it first, which is a quite time-consuming process when starting from scratch. 
 
 This image includes:
- - nginx v1.6.2
+ - nginx v1.11.2
  - php v5.6.22
  - mysql client v5.5.49
  - composer v1.2-dev
@@ -14,26 +14,24 @@ This image includes:
 
 And SilverStripe itself of course! You specify SilverStripe version in the tag of the image: e.g. `gambitlabs/silverstripe:3.1` contains the latest patch release for `3.1` (at the time of writing: `3.1.19`)
 
-Now when it's dockerized, it's a perfect deployment solution for applications written for the LEMP stack.
-
-_Note: It isn't production ready (yet!), but perfect for testing._
+_Note: It isn't of production quality (yet!), but we're getting close._
 
 ### Dockerize any SilverStripe site! (Express deployment)
 
-If you download this repo, you're able to convert any SilverStripe project to a docker image (at least, I hope so)
+If you download this repository, you're able to convert any SilverStripe project to a docker image (at least, we hope so)
 
 ```console
-$ # Assume we are in the home directory, and have one SilverStripe project called my-project.com
+$ # Assume you are in the home directory, and have one SilverStripe project called my-project.com
 $ pwd
 /home/user-1
 $ ls
 my-project.com
 
-$ # Here we have a SilverStripe version of version 3.x
+$ # Here you have your SilverStripe project
 $ ls my-project.com
 assets cms framework your-module some-extension mysite themes _ss_environment.php index.php
 
-$ # Download the source
+$ # Clone this repo
 $ git clone https://github.com/gambit-labs/silverstripe
 
 $ # Now we have two folders
@@ -45,7 +43,7 @@ $ # Deploy the site locally using docker.
 $ # SITE_DIR = the directory where the source is
 $ # SITE_REPO = the name the docker image should have. In the form docker-user/repository
 $ # SITE_VERSION = the version of the site you have.
-$ # SS_VERSION = the version of SilverStripe you want to use. Available: [3.0, 3.1, 3.2, 3.3, 3.4]
+$ # SS_VERSION = the version of SilverStripe you want to use. Available: [3.0, 3.1, 3.2, 3.3, 3.4, 4.0.0-alpha1]
 $ # There are more releases of the Gambit SilverStripe image as well, you may check out Docker Hub for more info
 $ make deploy-site-locally SITE_DIR=/home/user-1/my-project.com SITE_REPO=some-docker-hub-id/my-project SITE_VERSION=1.0 SS_VERSION=3.3
 
@@ -54,14 +52,13 @@ $ # Now, check out http://localhost to browse the site
 
 ### Wait, what? (Manual steps and explanation)
 
-How did that work? Well, Gambit has released docker base images that includes everything SilverStripe requires to run. 
-That makes it possible to run SilverStripe easily on virtually any host that has Docker installed. No more complex, manual SilverStripe installs.
+How did that work? Well, since it's dockerized, all setup logic and complexities have been put inside the image, and left are just a few customization parameters. 
 
-#### Build an Docker image with your source (optional)
+No more complex, manual SilverStripe installs!
 
-The simple, default `mysite` SilverStripe ships with isn't so fun in the long-term, so it's possible to copy in the source of any SilverStripe project as well.
-This is made simple by Docker's `ONBUILD` statement.
-TL;DR; The only thing you need to do, is to add a `Dockerfile` to the root of your project.
+#### Build an Docker image from your source
+
+The only thing you need to do, is to add a `Dockerfile` to the root of your project, and run `docker build`
 
 ```console
 $ pwd
@@ -83,7 +80,7 @@ Successfully built 27e0d72e4eff
 
 Here's really some `ONBUILD` magic. It copies the current directory (your site) into a source directory the base image `gambitlabs/silverstripe` serves from. See the Dockerfile in this project and read the Docker documentation about `ONBUILD` for more information.
 
-Note that `cms`, `framework` and `_ss_environment.php` are _NOT_ used in the container.
+Note that `cms`, `framework` and `_ss_environment.php` (and `reports`, `siteconfig` when using SilverStripe 3.2 or above) are _NOT_ used in the container.
 If they exist, they're overridden by the official SilverStripe release, and this is what it makes it so easy to switch versions, or even run the same site with 5 different SilverStripe versions on the same host, in different Docker containers.
 
 Let's run the website!
@@ -92,47 +89,30 @@ Let's run the website!
 $ # This command is a bit complex. First, the content in $() is executed, i.e. docker starts a MariaDB container.
 $ # From that run command, the container id is returned. We're using the container id to link the MariaDB container to the SilverStripe container.
 $ # From the SilverStripe's point of view, the MariaDB database is available at host db, on port 3306.
-$ # We're doing all this without affecting the host at all. The only thing you may want to customize it the port.
-$ # If you want to expose SilverStripe on port 8080 instead, change `-p 80:80` to `-p 8080:80`
+$ # We're doing all this without affecting the host at all.
 
 $ # Run MariaDB and SilverStripe. The version may be customized.
-$ docker run -d -p 80:80 \
+$ docker run -d -p 8080:80 \
 	--link $(docker run -d -e MYSQL_ROOT_PASSWORD=root mariadb):db \
 	-e SS_DATABASE_SERVER=db \
 	some-docker-hub-id/my-project:1.0
 
-$ # Now, check out http://localhost to browse the site
+$ # Now, check out http://localhost:8080 to browse the site
 ```
 
-One command, `make deploy-site-locally` did all of this for you, automatically. 
-But it's recommended to learn how it works and set it up manually.
+The command above, `make deploy-site-locally` did all of this for you, automatically. 
+But it's better to learn how it works and set it up manually, in order to understand it fully.
 
-Also note that we may spin up as many containers (=sites) as we want with this command.
-The only thing that then should change is the port that is exposed on host (the first argument to `-p`)
-
-#### Run the site from a mount, without building a custom image
-
-Instead of building a new image with your content, you may just serve the content via a Docker mount.
-
-```console
-$ pwd
-/home/user-1/my-project.com
-
-$ # Run MariaDB and SilverStripe. The version may be customized.
-$ docker run -d -p 80:80 \
-	--link $(docker run -d -e MYSQL_ROOT_PASSWORD=root mariadb):db \
-	-e SS_DATABASE_SERVER=db \
-	-v $(pwd):/source \
-	gambitlabs/silverstripe:3.3
-```
+Also note that we may spin up as many containers (=sites) as we want with Docker.
+The only thing that should change is the exposed port to the host (the first argument to `-p`)
 
 ### Options/customization
 
-You may customize the settings in the `_ss_environment.php` file by passing the arguments as `-e` parameters to docker run.
+You may customize the settings in the `_ss_environment.php` file by passing the arguments as `-e` parameters to `docker run`.
 
 Here are the options and their default values:
 
-Official SS_* variables:
+SS_* options:
  - `SS_ENVIRONMENT_TYPE=dev`
  - `SS_DATABASE_SERVER=127.0.0.1`
  - `SS_DATABASE_PORT=3306`
@@ -140,21 +120,34 @@ Official SS_* variables:
  - `SS_DATABASE_PASSWORD=root`
  - `SS_DEFAULT_ADMIN_USERNAME=admin`
  - `SS_DEFAULT_ADMIN_PASSWORD=admin`
+ - `SS_DEFAULT_ADMIN_PASSWORD=admin`
+ - `SS_ERROR_LOG=silverstripe.errlog`
 
-Variables customized for this image:
+NGINX_* options:
+ - `NGINX_DOMAIN_NAME=localhost`: The domains nginx should serve. Can be a string with multiple domain names. Example: "yyy.com www.yyy.com"
+ - `NGINX_LISTEN_PORT=80`: The HTTP port nginx should serve on
+ - `NGINX_LISTEN_HTTPS_PORT=443`: The HTTPS port nginx should serve on
+ - `NGINX_ENABLE_HTTPS=0`: If HTTPS should be enabled
+ - `NGINX_ENABLE_HTTP2=0`: If HTTP/2 should be enabled. Requires HTTPS.
+ - `NGINX_WORKER_PROCESSES=1`: The number of worker processed that should be spawned for handling requests.
+ - `NGINX_WORKER_CONNECTIONS=1024`: The maximum amount of requests a worker can handle.
+
+PHP_* options:
+ - `PHP_SERVER=localhost`: Which server nginx should pass PHP files to.
+ - `PHP_MAX_EXECUTION_TIME=300`: How many seconds a PHP request may take.
+ - `PHP_MAX_UPLOAD_SIZE=32`: How many megabytes an user is allowed to upload to the server.
  - `PHP_TIMEZONE="Europe/Helsinki"`: The timezone that should be set in php.ini
- - `SS_LISTEN_HOST=localhost`: The host nginx should serve on
- - `NGINX_LISTEN_PORT=80`: The port nginx should serve on
- - `SS_NUM_WORKERS`: The number of workers nginx should have
 
-### Development/live mode
+### Dev mode
 
-By using the method above, the source files of your site aren't modified in any way.
+By using the method above, the source files of your site aren't modified in any way, as they are copied into an image.
 
 But what if you want to be able to change the source (develop) at the same time you're serving the site?
 Enter the development mode!
 
-It's easy, just set `DEV_MODE=1` in the container and mount a path, e.g. `$(pwd)/live` to `/live` in the container.
+It's easy, just set `DEV_MODE=1` in the container and mount a path, e.g. `$(pwd)/live` to `/live` in the container. This method won't touch the repo you're working in at all.
+
+You may then edit the source in `$(pwd)/live`, and the changes will be reflected on the site.
 
 ```console
 $ pwd
@@ -175,6 +168,26 @@ $ # Without touching the source-controlled files in this directory. Perfect!
 $ ls
 assets cms framework live mysite some-extension themes your-module _ss_environment.php index.php
 ```
+
+### Readwrite development mode
+
+TODO
+
+## HTTPS and HTTP/2
+
+TODO
+
+### Security
+
+TODO
+
+## Overriding/extending the image config
+
+TODO
+
+### Patching
+
+TODO
 
 ## Deploy to Kubernetes!
 
@@ -205,11 +218,11 @@ $ # Variables:
 $ # IMAGE_AUTHOR=gambitlabs, the Docker Hub user the images should be pushed to
 $ # IMAGE_NAME=silverstripe, the image name
 $ # IMAGE_REVISION=1, the revision of the Dockerfile
-$ # VERSIONS="3.4.0 3.3.2 3.2.4 3.1.19 3.0.14", the versions of SilverStripe we want to build
+$ # VERSIONS="4.0.0-alpha1 3.4.0 3.3.2 3.2.4 3.1.19 3.0.14", the versions of SilverStripe we want to build
 $ ./build-images.sh
 ```
 
-and if you want to push at the same time:
+and if you want to push at the same time, add `PUSH=1`:
 
 ```console
 $ PUSH=1 ./build-images.sh
