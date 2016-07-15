@@ -177,7 +177,7 @@ chown -R www-data:www-data ${WWW_DIR}
 if [[ ${PHP_SERVER} == "localhost" ]]; then
 
 	# Start the FastCGI server
-	exec php5-fpm &
+	exec gosu www-data:www-data php5-fpm &
 fi
 
 # Start the nginx webserver in foreground mode. The docker container lifecycle will be tied to nginx.
