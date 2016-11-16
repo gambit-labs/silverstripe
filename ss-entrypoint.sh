@@ -105,4 +105,4 @@ if [[ ! -z $(grep "global \$database" ${WWW_DIR}/mysite/_config.php) && -z $(gre
 fi
 
 # Let the lemp-base upstream script handle the rest
-exec /docker-entrypoint.sh
+exec /docker-entrypoint.sh $@

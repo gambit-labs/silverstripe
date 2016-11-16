@@ -15,6 +15,20 @@ spec:
         image: __REPO__:__VERSION__
         ports:
         - containerPort: 80
+        env:
+        - name: PHP_SERVER
+          value: localhost:9000
+        volumeMounts:
+        - name: webdata
+          # When PHP_SERVER is set, the website data will be copied to this directory
+          # when that happens, the website data flows to the emptyDir and further to /var/www/html in the PHP container.
+          mountPath: /php_html
+      - name: php
+        # Swap to gambitlabs/php:7 if you'd like php 7.0
+        image: gambitlabs/php:5
+        volumeMounts:
+        - name: webdata
+          mountPath: /var/www/html
       - name: mariadb
         image: mariadb
         ports:
@@ -22,11 +36,14 @@ spec:
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: root
+      volumes:
+      - name: webdata
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: __NAME__
+  name: __NAME__-__VERSION__
   labels:
     version: "__VERSION__"
     site: __NAME__
