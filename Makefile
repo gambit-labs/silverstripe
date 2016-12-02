@@ -1,7 +1,6 @@
-# Gambit Labs SmartTrack 2016
 
 BASE_IMAGE?=gambitlabs/silverstripe
-DEFAULT_VERSION=3.4
+DEFAULT_VERSION?=3.4
 PORT?=80
 
 deploy:
@@ -33,7 +32,7 @@ deploy-site-editable: package-site
 
 SITE_NAME=$(shell basename $(SITE_REPO))
 deploy-site-k8s: package-site
-	sed -e "s|__REPO__|$(SITE_REPO)|g;s|__NAME__|$(SITE_NAME)|g;s|__VERSION__|$(SITE_VERSION)|g;" k8s.yaml | kubectl create -f - --validate=false
+	sed -e "s|__REPO__|$(SITE_REPO)|g;s|__NAME__|$(SITE_NAME)|g;s|__VERSION__|$(SITE_VERSION)|g;" k8s.yaml | kubectl apply -f -
 
 remove-site-k8s:
 
